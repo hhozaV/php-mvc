@@ -1,6 +1,7 @@
 <?php
 
 require_once('src/model/comment.php');
+require_once('src/lib/database.php');
 
 function addComment(string $post, array $input)
 {
