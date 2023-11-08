@@ -2,38 +2,58 @@
 
 class Post
 {
-    public int $identifier;
-    public string $title;
-    public string $content;
-    public string $frenchCreationDate;
+    public $title;
+    public $frenchCreationDate;
+    public $content;
+    public $identifier;
 }
 
-function getPost(int $postId)
+class PostRepository
 {
-    $database = postDbConnect();
-    $statement = $database->prepare(
-        "SELECT identifier, title, content, DATE_FORMAT(creation_date, '%d/%m/%Y à %Hh%imin%ss') AS french_creation_date FROM posts WHERE identifier = ?"
-    );
-    $statement->execute([$postId]);
+    public $database = null;
 
-    $post = $statement->fetch();
+    public function getPost(string $identifier): Post
+    {
+        $this->dbConnect();
+        $statement = $this->database->prepare(
+            "SELECT id, title, content, DATE_FORMAT(creation_date, '%d/%m/%Y à %Hh%imin%ss') AS french_creation_date FROM posts WHERE id = ?"
+        );
+        $statement->execute([$identifier]);
 
-    if (!$post) {
-        return null; // Le billet n'existe pas
+        $row = $statement->fetch();
+        $post = new Post();
+        $post->title = $row['title'];
+        $post->frenchCreationDate = $row['french_creation_date'];
+        $post->content = $row['content'];
+        $post->identifier = $row['id'];
+
+        return $post;
     }
 
-    $postObject = new Post();
-    $postObject->identifier = $post['identifier'];
-    $postObject->title = $post['title'];
-    $postObject->content = $post['content'];
-    $postObject->frenchCreationDate = $post['french_creation_date'];
+    public function getPosts(): array
+    {
+        $this->dbConnect();
+        $statement = $this->database->query(
+            "SELECT id, title, content, DATE_FORMAT(creation_date, '%d/%m/%Y à %Hh%imin%ss') AS french_creation_date FROM posts ORDER BY creation_date DESC LIMIT 0, 5"
+        );
+        $posts = [];
+        while (($row = $statement->fetch())) {
+            $post = new Post();
+            $post->title = $row['title'];
+            $post->frenchCreationDate = $row['french_creation_date'];
+            $post->content = $row['content'];
+            $post->identifier = $row['id'];
 
-    return $postObject;
-}
+            $posts[] = $post;
+        }
 
-function postDbConnect()
-{
-    $database = new PDO('mysql:host=localhost;dbname=blog;charset=utf8', 'blog', 'password');
+        return $posts;
+    }
 
-    return $database;
+    public function dbConnect()
+    {
+        if ($this->database === null) {
+            $this->database = new PDO('mysql:host=localhost;dbname=blog;charset=utf8', 'root', 'root');
+        }
+    }
 }
