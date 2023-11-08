@@ -1,7 +1,12 @@
 <?php
 
+namespace Application\Model\Comment;
+
 require_once('src/lib/database.php');
 require_once('src/controllers/add_comment.php');
+require_once('src/controllers/post.php');
+
+use Application\Model\Post\PostRepository;
 
 class Comment
 {
